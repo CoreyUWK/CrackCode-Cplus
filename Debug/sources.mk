@@ -23,8 +23,15 @@ C_DEPS :=
 
 # Every subdirectory with source files must be described here
 SUBDIRS := \
-. \
-Chap3StacksQueues \
-Chap2LinkedList \
+Chap10SortingAndSearching \
 Chap1ArraysStrings \
+Chap2LinkedList \
+Chap3StacksQueues \
+Chap4TreesGraphs \
+Chap5BitManipulation \
+Chap7ObjectOrientedDesign \
+Chap7ObjectOrientedDesign/DeckOfCards \
+Chap8Recursion \
+. \
+SmartPointers \
 

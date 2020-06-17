@@ -8,9 +8,16 @@ RM := rm -rf
 
 # All of the sources participating in the build are defined here
 -include sources.mk
+-include SmartPointers/subdir.mk
+-include Chap8Recursion/subdir.mk
+-include Chap7ObjectOrientedDesign/DeckOfCards/subdir.mk
+-include Chap7ObjectOrientedDesign/subdir.mk
+-include Chap5BitManipulation/subdir.mk
+-include Chap4TreesGraphs/subdir.mk
 -include Chap3StacksQueues/subdir.mk
 -include Chap2LinkedList/subdir.mk
 -include Chap1ArraysStrings/subdir.mk
+-include Chap10SortingAndSearching/subdir.mk
 -include subdir.mk
 -include objects.mk
 
@@ -56,6 +63,5 @@ clean:
 	-@echo ' '
 
 .PHONY: all clean dependents
-.SECONDARY:
 
 -include ../makefile.targets

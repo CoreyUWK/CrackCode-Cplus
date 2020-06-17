@@ -1,0 +1,15 @@
+/*
+ * Chap7ObjectOrientedDesign.h
+ *
+ *  Created on: May 23, 2020
+ *      Author: ckirsch
+ */
+
+#ifndef CHAP7OBJECTORIENTEDDESIGN_CHAP7OBJECTORIENTEDDESIGN_H_
+#define CHAP7OBJECTORIENTEDDESIGN_CHAP7OBJECTORIENTEDDESIGN_H_
+
+
+void Chap7ObjectOrientedDesignMain();
+
+
+#endif /* CHAP7OBJECTORIENTEDDESIGN_CHAP7OBJECTORIENTEDDESIGN_H_ */

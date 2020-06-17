@@ -5,16 +5,22 @@
  *      Author: ckirsch
  */
 #include "Chap1ArraysStringsMain.h"
-#include "hashTable.h"
 
 #include <iostream>
 #include <cassert>
 #include <cstdint>
 #include <stdlib.h>
+#include <unordered_set>
+#include <algorithm>
 using namespace std;
 
+const int NUM_ASCII_CHAR = 256;
 
-/* Time: O(character set size) as never iterate more than 256
+
+/* Implement an algorithm to determine if a string has all unique characters. What if you
+ * cannot use additional data structures?
+ *
+ * Time: O(character set size) as never iterate more than 256
  * Space: O(character set size) as will always be 256 hash
  *
  * If can reduce character set to 64 or 32 (variable size) then can use a bit hash to reduce memory
@@ -25,8 +31,6 @@ using namespace std;
  * extra space (recursive or arrays in divide and conquer */
 bool isUnique(string str)
 {
-	const int NUM_ASCII_CHAR = 256;
-
 	// Check if more than number of unique characters, hence has to have duplicates
 	if (str.size() > NUM_ASCII_CHAR)
 	{
@@ -48,9 +52,77 @@ bool isUnique(string str)
 	return true;
 }
 
+
+bool isUniqueSet(string str)
+{
+	if (str.length() > NUM_ASCII_CHAR)
+	{
+		return false;
+	}
+
+	unordered_set<char> hash;
+	for (char c : str)
+	{
+		if (hash.find(c) == hash.end())
+		{
+			hash.insert(c);
+		}
+		else
+		{
+			return false;
+		}
+	}
+
+	return true;
+}
+
+
+bool isUniqueSort(string str)
+{
+	if (str.length() > NUM_ASCII_CHAR)
+	{
+		return false;
+	}
+
+	// Can sort with std::sort-> O(nlogn)
+	// Or use counting sort of O(n)
+
+	std::sort(str.begin(), str.end());
+	for (uint i = 1; i < str.length(); ++i)
+	{
+		if (str[i - 1] == str[i])
+		{
+			return false;
+		}
+	}
+	return true;
+}
+
+
+bool isUniqueBit(string str)
+{
+	std::transform(str.begin(), str.end(), str.begin(), ::tolower);
+
+	unsigned int bitHash = 0;
+	for (char c : str)
+	{
+		unsigned int bitOffset = 1 << (c - 'a');
+		if (bitHash & bitOffset)
+		{
+			return false;
+		}
+		else
+		{
+			bitHash |= bitOffset;
+		}
+	}
+
+	return true;
+}
+
 //-----------------------------------------------------------------------------
 
-/* Check str1 and str2 are permutations of each other
+/* Given two strings, write a method to decide if one is a permutation of the other.
  * 1) check character counts
  * Time: O(max(n,m))
  * Space: O(1)
@@ -86,24 +158,54 @@ bool permutation(string str1, string str2)
 }
 
 
+// Time: O(n), Space: O(1) - works for small strings
+bool permutationCount(string str1, string str2)
+{
+	if (str1.length() != str2.length())
+	{
+		return false;
+	}
+
+	int count = 0;
+	for (char c : str1)
+	{
+		count += (c - 'a'); // - 'a' to try and keep count value low to fit in count data type
+	}
+
+	for (char c : str2)
+	{
+		count -= (c - 'a');
+	}
+
+	return (count == 0);
+}
+
+
 //-----------------------------------------------------------------------------
 
+/* Write a method to replace all spaces in a string with '%20: You may assume that the string
+has sufficient space at the end to hold the additional characters, and that you are given the "true"
+length of the string. (Note: If implementing in Java, please use a character array so that you can
+perform this operation in place.)
 
+EXAMPLE
+Input: "Mr John Smith ", 13
+Output: "Mr%20John%20Smith" */
 string& URLify(string &url, int trueLength)
 {
 	// Find where new end of string should be
-	int spaceCount = 0;
-	for (int i =0; i < trueLength; ++i)
+	unsigned int spaceCount = 0;
+	for (int i = 0; i < trueLength; ++i)
 	{
 		if (isspace(url[i]))
 		{
 			++spaceCount;
 		}
 	}
-	int newArraySize = trueLength + spaceCount * 2;
+	unsigned int newArraySize = trueLength + spaceCount * 2;
 
 	// Check if enough space
-	if (newArraySize > (int)url.size())
+	if (newArraySize > url.size())
 	{
 		return url;
 	}
@@ -141,7 +243,7 @@ string& URLify(string &url, int trueLength)
  * O(n) */
 bool containsPalidromPermutation(string str)
 {
-	int hash[26] = {false};
+	int hash[26] = {0};
 
 	int spaceCount = 0;
 	for (char c : str)
@@ -180,6 +282,37 @@ bool containsPalidromPermutation(string str)
 	}
 
 	return true;
+}
+
+
+bool containsPalidromPermutationBit(string str)
+{
+    unsigned int bitVector = 0;
+
+    // Make bitvector -> toggle
+    for (char c : str)
+    {
+        if (c == ' ')
+        {
+            continue;
+        }
+
+        int mask = 1 << (c - 'a');
+       /* if (bitVector & mask)
+        {
+        	// Turn off
+        	bitVector &= ~mask;
+        }
+        else
+        {
+        	// Turn on
+        	bitVector |= mask;
+        }*/
+        bitVector ^= mask;
+    }
+
+    // Check all matching or if odd only 1 different
+    return (0 == bitVector) || 0 == (bitVector & (bitVector - 1));
 }
 
 
@@ -363,7 +496,10 @@ bool isOneAwayCompressed(string str1, string str2)
 
 //-----------------------------------------------------------------------------
 
-
+/* Implement a method to perform basic string compression using the counts
+ * of repeated characters. For example, the string aabcccccaaa would become a2b1c5a3. If the
+ * "compressed" string would not become smaller than the original string, your method should return
+ * the original string. You can assume the string has only uppercase and lowercase letters (a - z). */
 string stringCompress(string str)
 {
 	if (str.size() <= 2)
@@ -393,7 +529,8 @@ string stringCompress(string str)
 
 
 //-----------------------------------------------------------------------------
-
+/* Given an image represented by an NxN matrix, where each pixel in the image is 4
+ * bytes, write a method to rotate the image by 90 degrees. (an you do this in place? */
 /* Rotate layer by layer
  * 1) copy top row, then rotate left->top, bottom->left, right->bottom, tmp/top->right
  * O(n) extra memory
@@ -440,8 +577,10 @@ bool rotateMatrix90ClockWise(int arr[n][n])
 
 //-----------------------------------------------------------------------------
 
-/* 1) preprocess matrix to find zeros => O(n^2) space, O(n^2*(n+n))=O(n^3) time
- * 2)  preprocess matrix but since more than 1 zero on the same row/col will have the same zeroing
+/* Write an algorithm such that if an element in an MxN matrix is 0, its entire row and
+ * column are set to O.
+ * 1) preprocess matrix to find zeros => O(n^2) space, O(n^2*(n+n))=O(n^3) time (n + m = setting zeros & n*m = search in copy)
+ * 2) preprocess matrix but since more than 1 zero on the same row/col will have the same zeroing
  * effect on that row/col just need to track per each row and col => O(2n) = O(n) space
  * time can be O(n^2)
  * 3) Based on solution 2 above, which is based on solution 1, use first row and col as preprocess
@@ -576,8 +715,14 @@ void zeroMatrixReduceMemory(bool matrix[n][n])
  * Time=O(n) */
 bool isRotation(string s1, string s2)
 {
-	s1 += s1;
-	return (string::npos == s1.find(s2)) ? false : true;
+	if (s1.size() != s2.size())
+	{
+		return false;
+	}
+
+	s1 += s1; // duplicate
+
+	return (string::npos != s1.find(s2));
 }
 
 //-----------------------------------------------------------------------------
@@ -590,9 +735,16 @@ void Chap1ArraysStringsMain()
 	// isUnique
 	assert(pass &= (true == isUnique("abcde")));
 	assert(pass &= (false == isUnique("hello world")));
+	assert(pass &= (true == isUniqueSet("abcde")));
+	assert(pass &= (false == isUniqueSet("hello world")));
+	assert(pass &= (true == isUniqueSort("abcde")));
+	assert(pass &= (false == isUniqueSort("hello world")));
+	assert(pass &= (true == isUniqueBit("abcde")));
+	assert(pass &= (false == isUniqueBit("hello world")));
 
 	// permutation
 	assert(pass &= (true == permutation("hello", "lohel")));
+	assert(pass &= (true == permutationCount("hello", "lohel")));
 
 	// URLify
 	string url = "Mr John Smith    ";
@@ -601,6 +753,7 @@ void Chap1ArraysStringsMain()
 	// Permutation of Palidrome
 	assert(pass &= (true == containsPalidromPermutation("Tact Coa")));
 	assert(pass &= (true == containsPalidromPermutationOptimized("Tact Coa")));
+	assert(pass &= (true == containsPalidromPermutationBit("Tact Coa")));
 
 	// Is One Edit Difference
 	assert(pass &= (true == isOneAway("pale", "ple")));

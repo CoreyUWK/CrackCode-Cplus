@@ -12,26 +12,28 @@
 using namespace std;
 
 
-class Node
+class LinkedListNode
 {
 public:
 	int value;
-	Node *next;
+	LinkedListNode *next;
+	bool isDelete;
 
-	Node(int value, Node *next = nullptr) : value(value), next(next) {}
+	LinkedListNode(int value, LinkedListNode *next = nullptr) : value(value), next(next), isDelete(false) {}
 
-	~Node()
+	~LinkedListNode()
 	{
-		if (next != nullptr)
+		if (next != nullptr && !next->isDelete)
 		{
-			Node *nextLocal = this->next;
+		    LinkedListNode *nextLocal = this->next;
 			this->next = nullptr;
+			this->isDelete = true;
 			delete nextLocal;
 		}
 
 		/*if (head != nullptr && head->alive)
 		{
-			Node *next = head->next;
+			LinkedListNode *next = head->next;
 			head->next = nullptr;
 			head->alive = false;
 			delete head;
@@ -46,7 +48,7 @@ public:
 	int getLength()
 	{
 		int count = 0;
-		Node *ptr = this;
+		LinkedListNode *ptr = this;
 		while (ptr != nullptr)
 		{
 			++count;
@@ -58,17 +60,17 @@ public:
 
 	void append(int value)
 	{
-		Node *head = this;
+	    LinkedListNode *head = this;
 		while (head->next != nullptr)
 		{
 			head = head->next;
 		}
-		head->next = new Node(value);
+		head->next = new LinkedListNode(value);
 	}
 
 	void print()
 	{
-		Node *head = this;
+	    LinkedListNode *head = this;
 		while (head != nullptr)
 		{
 			cout << head->value << " ";
@@ -82,15 +84,15 @@ public:
 //--------------------------------------------------------------
 
 /* Given linked list a1->a2->a3->b1->b2->b3 => a1->b1->a2->b2->a3->b3 */
-void interLeave(Node *head)
+void interLeave(LinkedListNode *head)
 {
 	if (head == nullptr || head->next == nullptr || head->next->next == nullptr)
 	{
 		return;
 	}
 
-	Node *slow = head;
-	Node *fast = head->next;
+	LinkedListNode *slow = head;
+	LinkedListNode *fast = head->next;
 
 	// At end slow = 1 before mid
 	//        fast = last
@@ -101,10 +103,10 @@ void interLeave(Node *head)
 	}
 
 	// Now interleave
-	while (head < slow)
+	while (head > slow) // Memory going in opposite direction
 	{
-		Node *headNext = head->next;
-		Node *slowNext = slow->next->next;
+	    LinkedListNode *headNext = head->next;
+		LinkedListNode *slowNext = slow->next->next;
 
 		head->next = slow->next;
 		slow->next->next = headNext;
@@ -115,11 +117,50 @@ void interLeave(Node *head)
 	head->next = slow->next;
 }
 
-//--------------------------------------------------------------
 
+void interLeave2(LinkedListNode *head)
+{
+	if (head == nullptr || head->next == nullptr || head->next->next == nullptr)
+	{
+		return;
+	}
+
+	LinkedListNode *slow = head;
+	LinkedListNode *fast = head->next;
+
+	// At end slow = 1 before mid
+	//        fast = last
+	while (fast->next != nullptr)
+	{
+		slow = slow->next;
+		fast = fast->next->next;
+	}
+
+	LinkedListNode *list1 = head;
+	LinkedListNode *list2 = slow->next;
+	slow->next = nullptr; // Split Lists
+
+	// Now interleave
+	while (list1 != nullptr)
+	{
+	    LinkedListNode *list1Next = list1->next;
+	    LinkedListNode *list2Next = list2->next;
+
+		list1->next = list2;
+		list2->next = list1Next;
+
+		list1 = list1Next;
+		list2 = list2Next;
+	}
+}
+
+//--------------------------------------------------------------
+/* Write code to remove duplicates from an unsorted linked list.
+FOLLOW UP
+How would you solve this problem if a temporary buffer is not allowed? */
 /* 1) With hash => Space O(n), Time O(n)
  * 2) brute force double loop cur, then check runner.data==cur.data => Space O(1), Time O(n^2) */
-void removeDup(Node *head)
+void removeDup(LinkedListNode *head)
 {
 	if (nullptr == head)
 	{
@@ -132,7 +173,7 @@ void removeDup(Node *head)
 	{
 		if (hash.find(head->next->value) != hash.end())
 		{
-			Node *tmp = head->next;
+		    LinkedListNode *tmp = head->next;
 			head->next = head->next->next;
 
 			tmp->next = nullptr;
@@ -146,8 +187,10 @@ void removeDup(Node *head)
 	}
 }
 
+
 //--------------------------------------------------------------
-Node * kToLast_Recursive(Node *head, int k, int &i)
+/* Implement an algorithm to find the kth to last element of a singly linked list */
+LinkedListNode * kToLast_Recursive(LinkedListNode *head, int k, int &i)
 {
 	if (head == nullptr)
 	{
@@ -155,7 +198,7 @@ Node * kToLast_Recursive(Node *head, int k, int &i)
 		return nullptr;
 	}
 
-	Node *n = kToLast_Recursive(head->next, k, i);
+	LinkedListNode *n = kToLast_Recursive(head->next, k, i);
 	++i;
 	if (i == k)
 	{
@@ -172,16 +215,36 @@ Node * kToLast_Recursive(Node *head, int k, int &i)
  * then head will be pointing to Kth item O(n)
  * 3) Recursively iterate till hit end(null), then count back up. When hit K pass node back.
  * O(n) time and space */
-Node * kToLast_Recursive(Node *head, int k)
+LinkedListNode * kToLast_Recursive(LinkedListNode *head, int k)
 {
 	int i = 0;
 	return kToLast_Recursive(head, k, i);
 }
 
-Node * kToLast_Iterative(Node *head, int k)
+LinkedListNode * kToLast_Recursive2(LinkedListNode *head, int k)
 {
-	Node *follower = head;
-	Node *current = head;
+	static int i = 0;
+
+	if (head == nullptr)
+	{
+		i = 0;
+		return nullptr;
+	}
+
+	LinkedListNode *n = kToLast_Recursive2(head, k);
+	++i;
+	if (i == k)
+	{
+		return head;
+	}
+	return n;
+}
+
+
+LinkedListNode * kToLast_Iterative(LinkedListNode *head, int k)
+{
+    LinkedListNode *follower = head;
+    LinkedListNode *current = head;
 
 	if (head == nullptr || k == 0)
 	{
@@ -212,8 +275,13 @@ Node * kToLast_Iterative(Node *head, int k)
 
 
 //--------------------------------------------------------------
-
-bool deleteMidNode(Node *n)
+/* Implement an algorithm to delete a node in the middle (i.e., any node but
+the first and last node, not necessarily the exact middle) of a singly linked list, given only access to
+that node.
+EXAMPLE
+Input: the node c from the linked list a - >b- >c - >d - >e- >f
+Result: nothing is returned, but the new linked list looks like a - >b- >d - >e- >f */
+bool deleteMidNode(LinkedListNode *n)
 {
 	// Check not empty or last
 	if (n == nullptr || n->next == nullptr)
@@ -222,7 +290,7 @@ bool deleteMidNode(Node *n)
 	}
 
 	// Copy next nodes value to current and delete next
-	Node *d = n->next;
+	LinkedListNode *d = n->next;
 	n->value = d->value;
 	n->next = d->next;
 	d->next = nullptr;
@@ -241,15 +309,15 @@ bool deleteMidNode(Node *n)
  *
  * 1) Make two lists of less and greater/equal, then merege the two O(n)
  * 2) If you hit a less then push to head, if you hit greater/equal push tail O(n) */
-Node * partition(Node *n, int x)
+LinkedListNode * partition(LinkedListNode *n, int x)
 {
 	if (n == nullptr)
 	{
 		return nullptr;
 	}
 
-	Node *lessListHead = nullptr, *lessListTail = nullptr;
-	Node *greaterListHead = nullptr, *greaterListTail = nullptr;
+	LinkedListNode *lessListHead = nullptr, *lessListTail = nullptr;
+	LinkedListNode *greaterListHead = nullptr, *greaterListTail = nullptr;
 
 	while (n != nullptr)
 	{
@@ -294,8 +362,49 @@ Node * partition(Node *n, int x)
 	return lessListHead;
 }
 
+LinkedListNode* partition2(LinkedListNode *head, int key)
+{
+	if (head == nullptr)
+	{
+		return head;
+	}
+
+	LinkedListNode *cur = head;
+
+	while (cur->next != nullptr)
+	{
+		if (cur->next->value < key)
+		{
+		    LinkedListNode *newHead = cur->next;
+			// move cur to front of list
+			cur->next = cur->next->next;  // remove prev link
+			newHead->next = head;  // remove next link
+			head = newHead;  // Update head
+		}
+		else
+		{
+			cur = cur->next;
+		}
+	}
+
+	return head;
+}
+
+
 //--------------------------------------------------------------
-Node * sumLists_Recursive(Node *list1, Node *list2, int carry)
+/* You have two numbers represented by a linked list, where each node contains a single
+digit. The digits are stored in reverse order, such that the 1 's digit is at the head of the list. Write a
+function that adds the two numbers and returns the sum as a linked list.
+EXAMPLE
+Input: (7-) 1 -) 6) + (5 -) 9 -) 2) .That is,617 + 295.
+Output: 2 -) 1 -) 9. That is, 912.
+FOLLOW UP
+Suppose the digits are stored in forward order. Repeat the above problem.
+EXAMPLE
+Input: (6 -) 1 -) 7) + (2 -) 9 -) 5).That is,617 + 295.
+Output: 9 -) 1 -) 2. That is, 912. */
+
+LinkedListNode * sumLists_Recursive(LinkedListNode *list1, LinkedListNode *list2, int carry)
 {
 	if (list1 == nullptr && list2 == nullptr && carry == 0)
 	{
@@ -303,9 +412,8 @@ Node * sumLists_Recursive(Node *list1, Node *list2, int carry)
 	}
 
 	int value = carry;
-
-	Node *list1Next = nullptr;
-	Node *list2Next = nullptr;
+	LinkedListNode *list1Next = nullptr;
+	LinkedListNode *list2Next = nullptr;
 
 	if (list1 != nullptr)
 	{
@@ -319,18 +427,8 @@ Node * sumLists_Recursive(Node *list1, Node *list2, int carry)
 		list2Next = list2->next;
 	}
 
-	if (value > 9)
-	{
-		carry = value / 10;
-		value %= 10;
-	}
-	else
-	{
-		carry = 0;
-	}
-
-	Node *sum = new Node(value);
-	sum->next = sumLists_Recursive(list1Next, list2Next, carry);
+	LinkedListNode *sum = new LinkedListNode(value % 10);
+	sum->next = sumLists_Recursive(list1Next, list2Next, value / 10);
 	return sum;
 }
 
@@ -340,7 +438,7 @@ Node * sumLists_Recursive(Node *list1, Node *list2, int carry)
  *
  * If list was reversed Get length of lists, then add zeros to front of smaller
  * then recurse down and add */
-Node * sumLists_Recursive(Node *list1, Node *list2)
+LinkedListNode * sumLists_Recursive(LinkedListNode *list1, LinkedListNode *list2)
 {
 	if (list1 == nullptr && list2 == nullptr)
 	{
@@ -358,10 +456,11 @@ Node * sumLists_Recursive(Node *list1, Node *list2)
 	return sumLists_Recursive(list1, list2, 0);
 }
 
-Node * sumLists_Iterative(Node *list1, Node *list2)
+
+LinkedListNode * sumLists_Iterative(LinkedListNode *list1, LinkedListNode *list2)
 {
-	Node *sumHead = nullptr;
-	Node *sum = nullptr;
+	LinkedListNode *sumHead = nullptr;
+	LinkedListNode *sum = nullptr;
 	int carry = 0;
 
 	while (!(list1 == nullptr && list2 == nullptr && carry == 0))
@@ -380,12 +479,12 @@ Node * sumLists_Iterative(Node *list1, Node *list2)
 
 		if (sumHead == nullptr)
 		{
-			sum = new Node(value % 10);
+			sum = new LinkedListNode(value % 10);
 			sumHead = sum;
 		}
 		else
 		{
-			sum->next = new Node(value % 10);
+			sum->next = new LinkedListNode(value % 10);
 			sum = sum->next;
 		}
 
@@ -396,7 +495,7 @@ Node * sumLists_Iterative(Node *list1, Node *list2)
 }
 
 
-Node * sumLists_Reverse(Node *list1, Node *list2, int &carry)
+LinkedListNode * sumLists_Reverse(LinkedListNode *list1, LinkedListNode *list2, int &carry)
 {
 	if (list1 == nullptr || list2 == nullptr)
 	{
@@ -404,31 +503,28 @@ Node * sumLists_Reverse(Node *list1, Node *list2, int &carry)
 		return nullptr;
 	}
 
-	Node *sum = sumLists_Reverse(list1->next, list2->next, carry);
+	LinkedListNode *sumNext = sumLists_Reverse(list1->next, list2->next, carry);
 
 	int value = carry + list1->value + list2->value;
 	carry = value / 10;
-	value = value % 10;
 
-	Node *newSum = new Node(value);
-	newSum->next = sum;
-
+	LinkedListNode *newSum = new LinkedListNode(value % 10, sumNext);
 	return newSum;
 }
 
 
-Node * sumLists_Reverse_Pad(Node *list, int x)
+LinkedListNode * sumLists_Reverse_Pad(LinkedListNode *list, int x)
 {
-	Node *head = list;
+	LinkedListNode *head = list;
 	for (int i = 0; i < x; ++i)
 	{
-		head = new Node(0, head);
+		head = new LinkedListNode(0, head);
 	}
 	return head;
 }
 
 
-Node * sumLists_Reverse(Node *list1, Node *list2)
+LinkedListNode * sumLists_Reverse(LinkedListNode *list1, LinkedListNode *list2)
 {
 	if (list1 == nullptr && list2 == nullptr)
 	{
@@ -457,11 +553,10 @@ Node * sumLists_Reverse(Node *list1, Node *list2)
 	}
 
 	int carry = 0;
-	Node *sum = sumLists_Reverse(list1, list2, carry);
+	LinkedListNode *sum = sumLists_Reverse(list1, list2, carry);
 	if (carry > 0)
 	{
-		Node *newSum = new Node(carry, sum);
-		sum = newSum;
+		sum = new LinkedListNode(carry, sum);
 	}
 
 	return sum;
@@ -469,23 +564,45 @@ Node * sumLists_Reverse(Node *list1, Node *list2)
 
 
 //--------------------------------------------------------------
-
-Node * isPalidrome_ReverseCmp_Reverse(Node *list)
+/* 1) can count with hash: time O(n), space O(n)
+2) slow and fast and check: time O(n), space O(1)
+3) slow and fast, push slow onto stack then compare with rest: Time O(n), space O(n/2 = n)
+4) reverse list and compare: time O(n), space O(n) */
+/* Implement a function to check if a linked list is a palindrome */
+/* calls: 1 + 2 + 3 + 4 = 10
+ * 1 + 2 + ... + (n-1) + n = n(n+1) / 2 = 10 => O(n^2) */
+LinkedListNode * isPalidrome_ReverseCmp_Reverse_Recursive(LinkedListNode *list)
 {
-	Node *head = nullptr;
+	if (list->next == nullptr)
+	{
+		return new LinkedListNode(list->value);
+	}
+
+	LinkedListNode *parent = isPalidrome_ReverseCmp_Reverse_Recursive(list->next);
+	LinkedListNode *tmpP = parent;
+	while (tmpP->next != nullptr)
+	{
+		tmpP = tmpP->next;
+	}
+	tmpP->next = new LinkedListNode(list->value);
+	return parent;
+}
+
+LinkedListNode * isPalidrome_ReverseCmp_Reverse(LinkedListNode *list)
+{
+	LinkedListNode *head = nullptr;
 	while (list != nullptr)
 	{
-		Node *clone = new Node(list->value);
-		clone->next = head;
-		head = clone;
+		head = new LinkedListNode(list->value, head);
 		list = list->next;
 	}
 	return head;
 }
 
-bool isPalidrome_ReverseCmp(Node *list)
+
+bool isPalidrome_ReverseCmp(LinkedListNode *list)
 {
-	Node *reverse = isPalidrome_ReverseCmp_Reverse(list);
+	LinkedListNode *reverse = isPalidrome_ReverseCmp_Reverse(list);
 
 	// Compare original and reverse
 	while (list != nullptr)
@@ -502,11 +619,11 @@ bool isPalidrome_ReverseCmp(Node *list)
 }
 
 
-bool isPalidrome_Stack(Node *list)
+bool isPalidrome_Stack(LinkedListNode *list)
 {
 	stack<decltype(list->value)> st;
-	Node *slow = list;
-	Node *fast = list;
+	LinkedListNode *slow = list;
+	LinkedListNode *fast = list;
 
 	while (fast != nullptr && fast->next != nullptr)
 	{
@@ -536,7 +653,7 @@ bool isPalidrome_Stack(Node *list)
 }
 
 
-Node * isPalidrome_Recursive(Node *list, int length)
+LinkedListNode * isPalidrome_Recursive(LinkedListNode *list, int length)
 {
 	if (length < 2)
 	{
@@ -550,7 +667,7 @@ Node * isPalidrome_Recursive(Node *list, int length)
 		return list;
 	}
 
-	Node *outer = isPalidrome_Recursive(list->next, length - 2);
+	LinkedListNode *outer = isPalidrome_Recursive(list->next, length - 2);
 	if (outer == nullptr ||
 			outer->value != list->value)
 	{
@@ -565,7 +682,7 @@ Node * isPalidrome_Recursive(Node *list, int length)
 	return outer->next;
 }
 
-bool isPalidrome_Recursive(Node *list)
+bool isPalidrome_Recursive(LinkedListNode *list)
 {
 	int length = list->getLength();
 
@@ -578,14 +695,29 @@ bool isPalidrome_Recursive(Node *list)
 }
 
 //--------------------------------------------------------------
+/* Given two (singly) linked lists, determine if the two lists intersect. Return the intersecting
+node. Note that the intersection is defined based on reference, not value. That is, if the kth
+node of the first linked list is the exact same node (by reference) as the jth node of the second
+linked list, then they are intersecting. */
 
-/* 1) *Get lengths of both lists, then match starting point for both lists and iterate till end
+/* 1) Get lengths of both lists, then match starting point for both lists and iterate till end
  * or both are same/intersect
  * Can check if lists intersect if tail node is the same for both
  * 2) Hash table check
- * 3) Get lengths of both lists and then match starting point, then recurse to end and work up to get
- * intersecting node */
-Node * getIntersetion(Node *list1, Node *list2)
+ *
+ *   a-b-c-d
+ * h-e-f-c-d
+Hence, end should be same at intersect
+1) concatenate lists and see if loop exists
+O(a+b), O(a+b)
+2) add nodes to two stacks and then keep poping until not same
+O(a+b), O(a+b)
+3) hash table of pointer values
+4) just chop off extra at front
+-get lengths, take min and chop off front of other
+-then find intersection
+O(a+b) */
+LinkedListNode * getIntersetion(LinkedListNode *list1, LinkedListNode *list2)
 {
 	if (list1 == nullptr || list2 == nullptr)
 	{
@@ -593,13 +725,13 @@ Node * getIntersetion(Node *list1, Node *list2)
 	}
 
 	// Get tails
-	Node *tail1 = list1;
+	LinkedListNode *tail1 = list1;
 	while (tail1->next != nullptr)
 	{
 		tail1 = tail1->next;
 	}
 
-	Node *tail2 = list2;
+	LinkedListNode *tail2 = list2;
 	while (tail2->next != nullptr)
 	{
 		tail2 = tail2->next;
@@ -644,20 +776,29 @@ Node * getIntersetion(Node *list1, Node *list2)
 
 //--------------------------------------------------------------
 
-/* 1) Find if loop exists with slow/fast pointer, then get start of loop by incrementing from collision
+/* Given a circular linked list, implement an algorithm that returns the node at the beginning of the loop.
+ * DEFINITION
+ * Circular linked list: A (corrupt) linked list in which a node's next pointer points to an earlier node, so
+ * as to make a loop in the linked list.
+ * EXAMPLE
+ * Input: A -) B -) C -) 0 -) E - ) C[thesameCasearlierl
+ * Output: C
+ *
+ * 1) Find if loop exists with slow/fast pointer, then get start of loop by incrementing from collision
  * and head and checking if head pointer ever in loop
  * That is looping through cycle part and checking if node is in it
  * O(cycle*noncycle)
- * 2) Find if loop exist same a 1) but to get start just increament from head and collision till equal  */
-Node * loopDetect(Node *list)
+ * 2) Find if loop exist same a 1) but to get start just increment from head and collision till equal
+ * 3) hash table */
+LinkedListNode * loopDetect(LinkedListNode *list)
 {
 	if (list == nullptr || list->next == nullptr)
 	{
 		return nullptr;
 	}
 
-	Node *slow = list;
-	Node *fast = list;
+	LinkedListNode *slow = list;
+	LinkedListNode *fast = list;
 
 	// Check if loop exists
 	while (fast != nullptr && fast->next != nullptr)
@@ -695,7 +836,7 @@ Node * loopDetect(Node *list)
 void interleaveTest()
 {
 	// Interleave
-	Node *head = new Node(1);
+	LinkedListNode *head = new LinkedListNode(1);
 	head->append(1);
 	head->append(1);
 	head->append(1);
@@ -710,9 +851,27 @@ void interleaveTest()
 	delete head;
 }
 
+void interleave2Test()
+{
+	// Interleave
+	LinkedListNode *head = new LinkedListNode(1);
+	head->append(1);
+	head->append(1);
+	head->append(1);
+	head->append(2);
+	head->append(2);
+	head->append(2);
+	head->append(2);
+
+	cout << "Interleave2" << endl;
+	interLeave2(head);
+	head->print();
+	delete head;
+}
+
 void removeDuplicateTest()
 {
-	Node *head = new Node(1);
+	LinkedListNode *head = new LinkedListNode(1);
 	head->append(1);
 	head->append(1);
 	head->append(1);
@@ -732,7 +891,7 @@ void removeDuplicateTest()
 void kToLastTest()
 {
 	// kToLast
-	Node *head = new Node(1);
+	LinkedListNode *head = new LinkedListNode(1);
 	head->append(2);
 	head->append(3);
 	head->append(4);
@@ -741,7 +900,7 @@ void kToLastTest()
 	head->append(7);
 	head->append(8);
 	cout << "kToLast" << endl;
-	Node *kth = kToLast_Recursive(head, 2);
+	LinkedListNode *kth = kToLast_Recursive(head, 2);
 	if (kth != nullptr)
 	{
 		cout << kth->value << endl;
@@ -766,7 +925,7 @@ void kToLastTest()
 
 void deleteMiddleTest()
 {
-	Node *head = new Node(1);
+	LinkedListNode *head = new LinkedListNode(1);
 	head->append(2);
 	head->append(3);
 	head->append(4);
@@ -784,7 +943,7 @@ void deleteMiddleTest()
 
 void partitionTest()
 {
-	Node *head = new Node(1);
+	LinkedListNode *head = new LinkedListNode(1);
 	head->append(2);
 	head->append(3);
 	head->append(4);
@@ -800,7 +959,7 @@ void partitionTest()
 	delete head;
 	head = nullptr;
 
-	head = new Node(3);
+	head = new LinkedListNode(3);
 	head->append(5);
 	head->append(8);
 	head->append(5);
@@ -814,20 +973,52 @@ void partitionTest()
 	head = nullptr;
 }
 
+void partition2Test()
+{
+	LinkedListNode *head = new LinkedListNode(1);
+	head->append(2);
+	head->append(3);
+	head->append(4);
+	head->append(5);
+	head->append(6);
+	head->append(7);
+	head->append(8);
+
+	// Partition
+	cout << "Partition2" << endl;
+	head = partition2(head, 4);
+	head->print();
+	delete head;
+	head = nullptr;
+
+	head = new LinkedListNode(3);
+	head->append(5);
+	head->append(8);
+	head->append(5);
+	head->append(10);
+	head->append(2);
+	head->append(1);
+	head->append(6);
+	head = partition2(head, 5);
+	head->print();
+	delete head;
+	head = nullptr;
+}
+
 void sumListsTest()
 {
 	// Sum Lists
 	cout << "Sum List" << endl;
-	Node *list1 = new Node(7);
+	LinkedListNode *list1 = new LinkedListNode(7);
 	list1->append(1);
 	list1->append(6);
 	list1->append(3);
 
-	Node *list2 = new Node(5);
+	LinkedListNode *list2 = new LinkedListNode(5);
 	list2->append(9);
 	list2->append(2);
 
-	Node *sumList = sumLists_Recursive(list1, list2);
+	LinkedListNode *sumList = sumLists_Recursive(list1, list2);
 	sumList->print();
 	delete sumList;
 
@@ -846,12 +1037,11 @@ void sumListsTest()
 void palidromeTest()
 {
 	// Palindrome
-	Node *list = new Node(0);
+	LinkedListNode *list = new LinkedListNode(0);
 	list->append(1);
 	list->append(2);
 	list->append(1);
 	list->append(0);
-
 	cout << "Palidrome" << endl;
 	assert(true == isPalidrome_ReverseCmp(list));
 	assert(true == isPalidrome_Stack(list));
@@ -866,22 +1056,22 @@ void intersectTest()
 {
 	cout << "Intersect Test" << endl;
 
-	Node *list1 = new Node(7);
+	LinkedListNode *list1 = new LinkedListNode(7);
 	list1->append(1);
 	list1->append(6);
 	list1->append(3);
 
-	Node *list2 = new Node(5);
+	LinkedListNode *list2 = new LinkedListNode(5);
 	list2->append(9);
 	list2->append(2);
 
 	// Intersect
-	Node *tail1 = list1;
+	LinkedListNode *tail1 = list1;
 	while(tail1->next != nullptr)
 	{
 		tail1 = tail1->next;
 	}
-	Node *tail2 = list2;
+	LinkedListNode *tail2 = list2;
 	while(tail2->next != nullptr)
 	{
 		tail2 = tail2->next;
@@ -889,7 +1079,7 @@ void intersectTest()
 
 	tail2->next = tail1;
 
-	Node *intersect = getIntersetion(list1, list2);
+	LinkedListNode *intersect = getIntersetion(list1, list2);
 	if (intersect != nullptr)
 	{
 		cout << intersect->value << endl;
@@ -908,7 +1098,7 @@ void loopDetectTest()
 {
 	cout << "loopDetect" << endl;
 
-	Node *head = new Node(1);
+	LinkedListNode *head = new LinkedListNode(1);
 	head->append(2);
 	head->append(3);
 	head->append(4);
@@ -918,14 +1108,14 @@ void loopDetectTest()
 	head->append(8);
 
 	// Create loop
-	Node *tail = head;
+	LinkedListNode *tail = head;
 	while (tail->next != nullptr)
 	{
 		tail = tail->next;
 	}
 	tail->next = head->next->next->next->next; // 8->5
 
-	Node *loopStart = loopDetect(head);
+	LinkedListNode *loopStart = loopDetect(head);
 	assert(5 == loopStart->value);
 	cout << loopStart->value << endl;
 	delete head;
@@ -934,10 +1124,12 @@ void loopDetectTest()
 void Chap2LinkedListMain()
 {
 	interleaveTest();
+	interleave2Test();
 	removeDuplicateTest();
 	kToLastTest();
 	deleteMiddleTest();
 	partitionTest();
+	partition2Test();
 	sumListsTest();
 	palidromeTest();
 	intersectTest();
